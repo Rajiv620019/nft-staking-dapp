@@ -61,4 +61,35 @@ contract ERC721Staking is ReentrancyGuard {
 
         stakers[msg.sender].timeOfLastUpdate = block.timestamp;
     }
+    
+    // Function to withdraw token
+    function withdrawToken(uint256 _tokenId) external nonReentrant {
+
+        require(stakers[msg.sender].amountStaked > 0, "You don't have any tokens staked");
+
+        require(stakerAddress[_tokenId] == msg.sender, "You don't own this token");
+
+        uint256 pendingRewards = calculateRewards(msg.sender);
+        stakers[msg.sender].unclaimedRewards += pendingRewards;
+
+        // Find the index of the token in the stakedTokens array
+        uint256 index = 0;
+        for(uint256 i = 0; i < stakers[msg.sender].stakedTokens.length; i++) {
+            if(stakers[msg.sender].stakedTokens[i].tokenId == _tokenId) {
+                index = i;
+                break;
+            }
+        }
+
+        // Remove the token from the stakedTokens array
+        stakers[msg.sender].stakedTokens[index].staker = address(0);
+
+        stakers[msg.sender].amountStaked --;
+
+        stakerAddress[_tokenId] = address(0);
+
+        nftCollection.safeTransferFrom(address(this), msg.sender, _tokenId);
+
+        stakers[msg.sender].timeOfLastUpdate = block.timestamp;
+    }
 }
