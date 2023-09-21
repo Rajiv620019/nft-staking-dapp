@@ -92,4 +92,30 @@ contract ERC721Staking is ReentrancyGuard {
 
         stakers[msg.sender].timeOfLastUpdate = block.timestamp;
     }
+
+    // Function to claim rewards
+    function claimRewards () external {
+        uint256 rewards = calculateRewards(msg.sender) + stakers[msg.sender].unclaimedRewards;
+
+        require(rewards > 0, "You don't have any rewards to claim");
+
+        stakers[msg.sender].timeOfLastUpdate = block.timestamp; 
+
+        stakers[msg.sender].unclaimedRewards = 0;
+
+        rewardToken.safeTransfer(msg.sender, rewards);
+    }
+
+    // Function to calculate rewards
+    function calculateRewards(address _staker) internal view returns(uint256 _rewards) {
+        return (((
+            ((block.timestamp - stakers[_staker].timeOfLastUpdate) * stakers[_staker].amountStaked)
+        ) * rewardsPerHour) / 3600);
+    }
+
+    // Available rewards to claim
+    function availableRewards(address _staker) public view returns(uint256) {
+        uint256 rewards = calculateRewards(_staker) + stakers[_staker].unclaimedRewards;
+        return rewards;
+    } 
 }
