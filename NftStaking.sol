@@ -118,4 +118,24 @@ contract ERC721Staking is ReentrancyGuard {
         uint256 rewards = calculateRewards(_staker) + stakers[_staker].unclaimedRewards;
         return rewards;
     } 
+
+    // Function to get staked tokens 
+    function getStakedTokens(address _user) public view returns(StakedToken[] memory) {
+
+        if(stakers[_user].amountStaked > 0) {
+            StakedToken[] memory _stakedTokens = new StakedToken[](stakers[_user].amountStaked);
+            uint256 index = 0;
+
+            for(uint256 i = 0; i < stakers[_user].stakedTokens.length; i++) {
+                if(stakers[_user].stakedTokens[i].staker != (address(0))) {
+                    _stakedTokens[index] = stakers[_user].stakedTokens[i];
+                    index++;
+                }
+            }
+            return _stakedTokens;
+        }
+        else {
+                return new StakedToken[](0);
+            }
+    }
 }
